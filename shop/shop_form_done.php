@@ -71,17 +71,48 @@ for($i=0;$i<$max;$i++)
     
     $honbun.=$name.' ';
     $honbun.=$price.'円×';
-    $honbun.=$suryo.'個';
+    $honbun.=$suryo.'個=';
     $honbun.=$shokei."円\n";
 }
     $sql='LOCK TABLES dat_sales,dat_sales_product WRITE';
     $stmt=$dbh->prepare($sql);
     $stmt->execute();
     
+    $lastmembercode=0;
+    if($chumon=='chumontouroku')
+    {
+    $sql = 'INSERT INTO dat_member(password,name,email,postal1,postal2,address,tel,danjo,born)VALUES(?,?,?,?,?,?,?,?,?)';
+    $stmt = $dbh->prepare($sql);
+    $data=array();
+    $data[]=md5($pass);
+    $data[]=$onamae;
+    $data[]=$email;
+    $data[]=$postal1;
+    $data[]=$postal2;
+    $data[]=$address;
+    $data[]=$tel;
+    if($danjo=='dan')
+    {
+        $data[]=1;
+    }
+    else
+    {
+        $data[]=2;
+    }
+    $data[]=$birth;
+    $stmt->execute($data);
+
+    $sql = 'SELECT LAST_INSERT_ID()';
+    $stmt = $dbh->prepare($sql);
+    $stmt->execute();
+    $rec = $stmt->fetch(PDO::FETCH_ASSOC);
+    $lastcode=$rec['LAST_INSERT_ID()'];    
+    }
+    
     $sql = 'INSERT INTO dat_sales(code_member,name,email,postal1,postal2,address,tel)VALUES(?,?,?,?,?,?,?)';
     $stmt = $dbh->prepare($sql);
     $data=array();
-    $data[]=0;
+    $data[]=$lastmembercode;
     $data[]=$onamae;
     $data[]=$email;
     $data[]=$postal1;
@@ -114,6 +145,14 @@ for($i=0;$i<$max;$i++)
 
     $dbh = null;
     
+    if($chumon=='chumontouroku')
+    {
+        print'※会員登録が完了いたしました。<br/>';
+        print'次回からメールアドレスとパスワードでログインしてください。<br/>';
+        print'ご注文が簡単にできるようになります。<br/>';
+        print'<br/>';
+    }
+    
     $honbun.="送料は無料です。\n";
     $honbun.="------------------------------------------------\n";
     $honbun.="\n";
@@ -121,6 +160,14 @@ for($i=0;$i<$max;$i++)
     $honbun.="ＫＲＭ銀行 澤支店 普通口座１２３４５６７\n";
     $honbun.="入金確認が取れ次第、梱包、発送させていただきます。\n";
     $honbun.="\n";
+    
+    if($chumon=='chumontouroku')
+    {
+        $honbun.="※会員登録が完了いたしました。\n";
+        $honbun.="次回からメールアドレスとパスワードでログインしてください。\n";
+        $honbun.="ご注文が簡単にできるようになります。\n";
+        $honbun.="\n";
+    }
     $honbun.="                 \n";
     $honbun.="　～安心野菜のろくまる農園～\n";
     $honbun.="\n";
@@ -128,8 +175,8 @@ for($i=0;$i<$max;$i++)
     $honbun.="電話0267-00-0000";
     $honbun.="メール info@gmail.com\n";
     $honbun.="                      \n";    
-    //print'<br/>';    
-    //print nl2br($honbun);
+    print'<br/>';    
+    print nl2br($honbun);
     
     /*$title='ご注文ありがとうございます。';
     $header='From:info@rokumarunouen.co.jp';
